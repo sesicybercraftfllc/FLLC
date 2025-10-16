@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Cybercraft — FLLC & Educação Patrimonial</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f3e9dc; 
+  --card: #fff7ec;
+  --accent: #c2783e;
+  --accent-light: #f4b860;
+  --text: #3e2e1e;
+  --muted: #6d5741;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(180deg, #f9f4ec 0%, #f3e4ce 100%);
+  color: var(--text);
+  margin: 0;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+.container {
+  width: 100%;
+  max-width: 900px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(139, 95, 39, 0.2);
+  padding: 24px;
+}
+header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.logo {
+  width: 70px; height: 70px;
+  background: linear-gradient(135deg, #c2783e, #f4b860);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fffaf3;
+  font-weight: 700;
+  font-size: 20px;
+}
+h1 { margin: 0; font-size: 20px; }
+p.lead { color: var(--muted); margin: 6px 0 20px; }
+.card {
+  background: #fffdf7;
+  border: 2px solid #f2d4a5;
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+.btn.primary { background: var(--accent); color: #fffdf5; }
+.btn.primary:hover { background: var(--accent-light); color: var(--text); transition: 0.2s; }
+.btn.secondary { background: #f0e2c8; color: var(--text); }
+.choices { display: flex; gap: 12px; flex-wrap: wrap; }
+.question { font-size: 18px; margin-bottom: 10px; font-weight: 600; }
+.option {
+  padding: 12px;
+  background: #fff9f0;
+  border: 1px solid #f1d9aa;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.option:hover { background: #fbe5c7; }
+.feedback {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.feedback.correct {
+  background: #d4f7d2;
+  border: 1px solid #7ebc68;
+  color: #3a652f;
+}
+.feedback.wrong {
+  background: #fcd9d9;
+  border: 1px solid #c74b4b;
+  color: #7a2626;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+footer {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <header>
+    <div class="logo">CY</div>
+    <div>
+      <h1>SESI Cybercraft — Quizzes FLLC & Educação Patrimonial</h1>
+      <p class="lead">Explore, descubra e teste seu conhecimento sobre robótica e arqueologia!</p>
+    </div>
+  </header>
+
+  <div id="startScreen" class="card">
+    <p><strong>Olá, exploradores!</strong> Escolham qual trilha do conhecimento vocês querem seguir:</p>
+    <div class="choices">
+      <button class="btn primary" onclick="startQuiz('fll')">Quiz FLLC</button>
+      <button class="btn secondary" onclick="startQuiz('patrimonio')">Quiz Educação Patrimonial</button>
+    </div>
+  </div>
+
+  <div id="quizScreen" class="card hidden">
+    <div class="meta">
+      <div>Pergunta <span id="current">1</span> de <span id="total">--</span></div>
+      <div>Pontuação: <span id="score">0</span></div>
+    </div>
+    <div id="questionText" class="question"></div>
+    <div id="options"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <div style="margin-top:10px;display:flex;gap:10px;">
+      <button class="btn primary" id="btnNext" onclick="nextQuestion()" disabled>Próxima</button>
+      <button class="btn secondary" onclick="quitToStart()">Voltar</button>
+    </div>
+  </div>
+
+  <div id="resultScreen" class="card hidden">
+    <h2>Resultado final</h2>
+    <p id="resultText"></p>
+    <p id="detailText" style="color:var(--muted)"></p>
+    <div style="margin-top:12px;">
+      <button class="btn primary" onclick="restart()">Refazer</button>
+      <button class="btn secondary" onclick="quitToStart()">Escolher outro quiz</button>
+    </div>
+  </div>
+
+  <footer>
+    <small>💛 SESI Cybercraft — Projeto Educacional UNEARTHED • Aprender é desenterrar o conhecimento!</small>
+  </footer>
+</div>
+
+<script>
+// --- Dados dos Quizzes ---
+const quizzes = {
+  fll: [
+    { q: "O que significa FLLC?", a: 0, options: ["First Lego League Challenge", "First Learning League Championship", "Future Lab League", "First League of Learning"], feedback: "FLLC é a sigla de FIRST LEGO League Challenge, competição internacional de robótica educacional." },
+    { q: "Qual é o tema da temporada 2025-2026?", a: 1, options: ["Energy Journey", "UNEARTHED", "Cargo Connect", "Superpowered"], feedback: "O tema UNEARTHED aborda a arqueologia e a preservação do patrimônio histórico." },
+    { q: "Qual é o principal objetivo da FLLC?", a: 0, options: ["Incentivar a inovação e o aprendizado STEM", "Competir por prêmios em dinheiro", "Fazer robôs de combate", "Criar jogos digitais"], feedback: "A FLLC incentiva o aprendizado em ciência, tecnologia, engenharia e matemática (STEM) com valores de cooperação e respeito." },
+    { q: "O que significa o 'Core Values' da FLLC?", a: 2, options: ["Regras de competição", "Técnicas de montagem", "Valores fundamentais de trabalho em equipe", "Critérios de pontuação"], feedback: "Os Core Values representam os valores de cooperação, respeito, inclusão e diversão." },
+    { q: "O que os times devem apresentar além do robô?", a: 1, options: ["Somente o projeto técnico", "Um projeto de inovação", "Um relatório de pontuação", "Nada, apenas o robô"], feedback: "Além do robô, os times apresentam um projeto de inovação que propõe soluções para um problema do tema da temporada." },
+    { q: "Quantas áreas são avaliadas na FLLC?", a: 2, options: ["2", "4", "3", "5"], feedback: "Os times são avaliados em três áreas: Projeto de Inovação, Design do Robô e Core Values." },
+    { q: "Quem organiza a FLLC no Brasil?", a: 0, options: ["SESI", "LEGO Group", "Ministério da Educação", "NASA"], feedback: "No Brasil, a FLLC é organizada pelo SESI Nacional." },
+    { q: "O robô é programado em qual plataforma LEGO?", a: 1, options: ["Mindstorms EV3", "SPIKE Prime", "WeDo", "RCX"], feedback: "Atualmente, a plataforma oficial usada na FLLC é o LEGO SPIKE Prime." },
+    { q: "Quanto tempo dura uma rodada de robô na mesa?", a: 3, options: ["1 min", "1:30 min", "2 min", "2:30 min"], feedback: "Cada rodada dura 2 minutos e 30 segundos." },
+    { q: "Qual valor representa ajudar outros times?", a: 2, options: ["Trabalho em equipe", "Descoberta", "Coopertition", "Inovação"], feedback: "Coopertition significa competir com respeito e colaboração." },
+  ],
+  patrimonio: [
+    { q: "O que é Educação Patrimonial?", a: 0, options: ["Processo de valorização e preservação da herança cultural", "Matéria escolar obrigatória", "Estudo de leis ambientais", "Curso técnico"], feedback: "Educação Patrimonial busca conscientizar as pessoas sobre o valor da história e da cultura local." },
+    { q: "O que é arqueologia?", a: 1, options: ["Estudo das estrelas", "Estudo das sociedades humanas por meio de vestígios materiais", "Estudo de fósseis de dinossauros", "Ciência de metais antigos"], feedback: "Arqueologia investiga o passado humano a partir de artefatos e construções." },
+    { q: "O que fazer se encontrar um objeto antigo no quintal?", a: 2, options: ["Guardar como lembrança", "Levar ao museu", "Comunicar ao IPHAN ou à prefeitura", "Postar nas redes sociais"], feedback: "O correto é avisar o IPHAN ou autoridades locais, pois trata-se de patrimônio público." },
+    { q: "O que significa IPHAN?", a: 1, options: ["Instituto de Pesquisa Histórica Nacional", "Instituto do Patrimônio Histórico e Artístico Nacional", "Instituto Paulista de História e Arqueologia Nacional", "Instituto Patrimonial de História e Natureza"], feedback: "IPHAN é o Instituto do Patrimônio Histórico e Artístico Nacional." },
+    { q: "O que é um sítio arqueológico?", a: 3, options: ["Museu ao ar livre", "Área de escavação de fósseis", "Depósito de artefatos", "Local onde há vestígios de ocupações humanas antigas"], feedback: "Sítio arqueológico é o local onde há registros e vestígios deixados por antigas civilizações." },
+  ]
+};
+
+let quizType, current = 0, score = 0;
+
+function startQuiz(type) {
+  quizType = type;
+  current = 0;
+  score = 0;
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('quizScreen').classList.remove('hidden');
+  document.getElementById('total').innerText = quizzes[type].length;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = quizzes[quizType][current];
+  document.getElementById('current').innerText = current + 1;
+  document.getElementById('questionText').innerText = q.q;
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerText = opt;
+    div.onclick = () => selectOption(i);
+    optionsDiv.appendChild(div);
+  });
+  document.getElementById('feedback').classList.add('hidden');
+  document.getElementById('btnNext').disabled = true;
+}
+
+function selectOption(i) {
+  const q = quizzes[quizType][current];
+  const feedback = document.getElementById('feedback');
+  const options = document.querySelectorAll('.option');
+  options.forEach(o => o.style.pointerEvents = 'none');
+  if (i === q.a) {
+    score++;
+    feedback.className = 'feedback correct';
+    feedback.innerText = "✅ Correto! " + q.feedback;
+  } else {
+    feedback.className = 'feedback wrong';
+    feedback.innerText = "❌ Errado. " + q.feedback;
+  }
+  feedback.classList.remove('hidden');
+  document.getElementById('score').innerText = score;
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQuestion() {
+  current++;
+  if (current < quizzes[quizType].length) {
+    loadQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('quizScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.remove('hidden');
+  const total = quizzes[quizType].length;
+  const percent = Math.round((score / total) * 100);
+  document.getElementById('resultText').innerText = `Você acertou ${score} de ${total} perguntas (${percent}%)`;
+  document.getElementById('detailText').innerText =
+    percent > 80 ? "Excelente trabalho, explorador!" :
+    percent > 50 ? "Bom resultado, mas ainda dá pra cavar mais conhecimento!" :
+    "Vamos revisar um pouquinho mais e tentar de novo!";
+}
+
+function quitToStart() {
+  document.getElementById('quizScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+
+function restart() {
+  startQuiz(quizType);
+}
+</script>
+</body>
+</html>
